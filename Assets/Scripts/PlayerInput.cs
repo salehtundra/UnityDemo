@@ -14,21 +14,22 @@ public class PlayerInput : MonoBehaviour {
 		Vector2 directionalInput = new Vector2 (Input.GetAxisRaw ("Horizontal"), Input.GetAxisRaw ("Vertical"));
 		player.SetDirectionalInput (directionalInput);
 
-		if (Input.GetKeyDown (KeyCode.Space)) {
+        // Clint - channged  
+        if (Input.GetButtonDown("Jump")) {
 			player.OnJumpInputDown ();
 		}
-		if (Input.GetKeyUp (KeyCode.Space)) {
+		else if (Input.GetButtonUp("Jump")) {
 			player.OnJumpInputUp ();
 		}
-        if (Input.GetKeyDown(KeyCode.LeftShift))
-        {
+
+		if (Input.GetButtonDown("Sprint")) {
             player.startSprint();
         }
-        if (Input.GetKeyUp(KeyCode.LeftShift))
-        {
+		else if (Input.GetButtonUp("Sprint")) {
             player.endSprint();
         }
-        if (Input.GetKeyDown(KeyCode.C)) {
+
+		if (Input.GetButtonDown("Dodge")) {
             player.PerformDodge();
         }
     }
