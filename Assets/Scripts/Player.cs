@@ -4,8 +4,11 @@ using System.Collections;
 [RequireComponent (typeof (Controller2D))]
 public class Player : MonoBehaviour {
 
+    float staminaThreshold = 1.0f;
+    float staminaDampner = 0.5f;
+
     // Jumping
-	public float maxJumpHeight = 4;
+    public float maxJumpHeight = 4;
 	public float minJumpHeight = 1;
 	public float timeToJumpApex = .4f;
 	public float accelerationTimeAirborne = .2f;
@@ -37,12 +40,12 @@ public class Player : MonoBehaviour {
     bool wallSliding;
     public bool wallJumping = false;
 	int wallDirX;
-    //---------------------
     float currentWallJumpTime = 0;
     float wallJumpDuration = .1f;
 
     //Stamina bar
     public float stamina, maxStamina = 5;
+    bool inStaminaPenalty = false;
     Rect staminaRect;
     Texture2D staminaTexture;
 
@@ -102,6 +105,7 @@ public class Player : MonoBehaviour {
         HandleSprinting();
         HandleWallJumping();
         CalculateVelocity ();
+        rechargeStamina();
 
         controller.Move (velocity * Time.deltaTime, directionalInput);
 
@@ -132,7 +136,7 @@ public class Player : MonoBehaviour {
 	}
 
 	public void OnJumpInputDown() {
-		if (wallSliding) {
+		if (wallSliding && !inStaminaPenalty) {
             drainStamina(1);
             wallJumping = true;
         }
@@ -158,6 +162,9 @@ public class Player : MonoBehaviour {
         stamina -= deduction;
         if (stamina < 0) {
             stamina = 0;
+            inStaminaPenalty = true;
+            staminaTexture.SetPixel(1, 1, Color.white);
+            staminaTexture.Apply();
         }
     }
 		
@@ -171,8 +178,6 @@ public class Player : MonoBehaviour {
         } else if (directionalInput.x < 0) {
              isFacingLeft = true;
         }
-        Debug.Log("Is Facing Left: " + isFacingLeft);
-        Debug.Log("Directionl Inp: " + directionalInput.x);
     }
    
 	void HandleWallSliding() {
@@ -203,11 +208,24 @@ public class Player : MonoBehaviour {
 	}
 
     void HandleSprinting() {
-        isSprinting = isTryingToSprint && stamina > 0;
+        isSprinting = isTryingToSprint && stamina > 0 && !inStaminaPenalty;
         if (velocity.x != 0 && isSprinting) {
             drainStamina(Time.deltaTime);
-        } else if (stamina < maxStamina && (velocity.x == 0 || !isTryingToSprint)) {
-            stamina += Time.deltaTime;
+        }
+    }
+
+    void rechargeStamina() {
+        if (inStaminaPenalty && stamina >= staminaThreshold) {
+            inStaminaPenalty = false;
+            staminaTexture.SetPixel(1, 1, Color.green);
+            staminaTexture.Apply();
+        }
+        if (stamina < maxStamina) {
+            if (inStaminaPenalty) {
+                stamina += Time.deltaTime * staminaDampner;
+            } else if (velocity.x == 0 || !isTryingToSprint) {
+                stamina += Time.deltaTime;
+            }
         }
     }
 
@@ -233,7 +251,7 @@ public class Player : MonoBehaviour {
     }
 
     public void PerformDodge() {
-        if (controller.collisions.below) {
+        if (controller.collisions.below && !inStaminaPenalty) {
             isDodging = true;
             drainStamina(1);
         }
