@@ -32,7 +32,7 @@ public class Player : MonoBehaviour {
         // Wall Jump
 	public Vector2 wallLeap;
 	public float wallSlideSpeedMax = 0;
-	public float wallStickTime = .25f;
+	float wallStickTime = .1f;
 	float timeToWallUnstick;
     bool wallSliding;
     public bool wallJumping = false;
@@ -257,7 +257,9 @@ public class Player : MonoBehaviour {
                 currentAcceleration = (controller.collisions.below) ? accelerationTimeGrounded : accelerationTimeAirborne;
             }
 
-            velocity.x = Mathf.SmoothDamp(velocity.x, targetVelocityX, ref velocityXSmoothing, currentAcceleration);
+            if ((wallSliding && timeToWallUnstick <= 0) || !wallSliding) {
+                velocity.x = Mathf.SmoothDamp(velocity.x, targetVelocityX, ref velocityXSmoothing, currentAcceleration);
+            }
             velocity.y += gravity * Time.deltaTime;
         }
 	}
@@ -273,7 +275,7 @@ public class Player : MonoBehaviour {
         healthRect.width = healthRectWidth;
         GUI.DrawTexture(healthRect, healthTexture);
 
-        float debugRatio = (dodgeDuration - currentDodgeTime) / dodgeDuration;
+        float debugRatio = timeToWallUnstick / wallStickTime;
         float debugRectWidth = debugRatio * Screen.width / 3;
         debugRect.width = debugRectWidth;
         GUI.DrawTexture(debugRect, debugTexture);
