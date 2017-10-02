@@ -9,17 +9,17 @@ public class Player : MonoBehaviour {
 	public float minJumpHeight = 1;
 	public float timeToJumpApex = .4f;
 	public float accelerationTimeAirborne = .2f;
-    public bool isJumping = false;
+    bool isJumping = false;
+    bool isTryingToJump = false;
     float maxJumpVelocity;
 	float minJumpVelocity;
 
     // Sprint/Walking  
 	public float accelerationTimeGrounded = .1f;
     public float moveSpeed = 6;
-    public float runSpeed = 12;
-    bool isRunning;
-    bool isTryingToRun;
-    public bool isSprinting = true;    
+    public float sprintSpeed = 12;
+    bool isSprinting;
+    bool isTryingToSprint;   
 
     //Dodge logic
     float dodgeSpeed = 20;
@@ -30,17 +30,18 @@ public class Player : MonoBehaviour {
     bool isFacingLeft;
 
         // Wall Jump
-    public Vector2 wallJumpClimb;
-	public Vector2 wallJumpOff;
 	public Vector2 wallLeap;
-	public float wallSlideSpeedMax = 3;
+	public float wallSlideSpeedMax = 0;
 	public float wallStickTime = .25f;
 	float timeToWallUnstick;
     bool wallSliding;
     public bool wallJumping = false;
 	int wallDirX;
-     
-	//Stamina bar
+    //---------------------
+    float currentWallJumpTime = 0;
+    float wallJumpDuration = .1f;
+
+    //Stamina bar
     public float stamina, maxStamina = 5;
     Rect staminaRect;
     Texture2D staminaTexture;
@@ -62,7 +63,12 @@ public class Player : MonoBehaviour {
 	Controller2D controller;
 	Vector2 directionalInput;
 
-	void Start() {
+
+    public void SetIsTryingToSprint(bool sprintValue) {
+        isTryingToSprint = sprintValue;
+    }
+
+    void Start() {
 		controller = GetComponent<Controller2D> ();
         stamina = maxStamina;
         health = maxHealth;
@@ -93,13 +99,14 @@ public class Player : MonoBehaviour {
         CalculateFacingDirection();
         HandleWallSliding();
         HandleDodging();
-        HandleRunning();
+        HandleSprinting();
+        HandleWallJumping();
         CalculateVelocity ();
 
         controller.Move (velocity * Time.deltaTime, directionalInput);
 
 		if (controller.collisions.above || controller.collisions.below) {
-            wallJumping = false;
+            //wallJumping = false;
 			if (controller.collisions.slidingDownMaxSlope) {
 				velocity.y += controller.collisions.slopeNormal.y * -gravity * Time.deltaTime;
 			} else {
@@ -109,11 +116,11 @@ public class Player : MonoBehaviour {
 	}
 
 	public void SetDirectionalInput (Vector2 input) {
-        // float deadZone = 0.2F;
+        // float deadZone = 0.3F;
 
         // Clint - Not necassary anymore - we don't use directional input when we are dodging
         // if (!isDodging) {
-            directionalInput = input;
+        directionalInput = input;
             // if (directionalInput.x < deadZone  && directionalInput.x > -deadZone) {
             //     directionalInput.x = 0F;
             // }
@@ -126,18 +133,6 @@ public class Player : MonoBehaviour {
 
 	public void OnJumpInputDown() {
 		if (wallSliding) {
-			if (wallDirX == directionalInput.x) {
-				velocity.x = -wallDirX * wallJumpClimb.x;
-				velocity.y = wallJumpClimb.y;
-			}
-			else if (directionalInput.x == 0) {
-				velocity.x = -wallDirX * wallJumpOff.x;
-				velocity.y = wallJumpOff.y;
-			}
-			else {
-				velocity.x = -wallDirX * wallLeap.x;
-				velocity.y = wallLeap.y;
-			}
             drainStamina(1);
             wallJumping = true;
         }
@@ -153,38 +148,38 @@ public class Player : MonoBehaviour {
         }
 	}
 
+    public void OnJumpInputUp() {
+        if (velocity.y > minJumpVelocity) {
+            velocity.y = minJumpVelocity;
+        }
+    }
+
     public void drainStamina(float deduction) {
         stamina -= deduction;
         if (stamina < 0) {
             stamina = 0;
         }
     }
-
-	public void OnJumpInputUp() {
-		if (velocity.y > minJumpVelocity) {
-			velocity.y = minJumpVelocity;
-		}
-	}
 		
     // Clint 
     void CalculateFacingDirection() {
 
-        isFacingLeft = (velocity.x > 0) ? false : true;
+        // isFacingLeft = (velocity.x > 0) ? false : true;
 
-        // if (directionalInput.x > 0) {
-        //     isFacingLeft = false;
-        // } else if (directionalInput.x < 0) {
-        //     isFacingLeft = true;
-        // }
-        // Debug.Log("Is Facing Left: " + isFacingLeft);
-        // Debug.Log("Directionl Inp: " + directionalInput.x);
+        if (directionalInput.x > 0) {
+             isFacingLeft = false;
+        } else if (directionalInput.x < 0) {
+             isFacingLeft = true;
+        }
+        Debug.Log("Is Facing Left: " + isFacingLeft);
+        Debug.Log("Directionl Inp: " + directionalInput.x);
     }
    
 	void HandleWallSliding() {
-		wallDirX = (controller.collisions.left) ? -1 : 1;
-		wallSliding = false;
-		if ((controller.collisions.left || controller.collisions.right) && !controller.collisions.below && velocity.y < 0) {
-			wallSliding = true;
+        wallSliding = false;
+        if ((controller.collisions.left || controller.collisions.right) && !controller.collisions.below && velocity.y < 0) {
+            wallDirX = (controller.collisions.left) ? -1 : 1;
+            wallSliding = true;
 
             if (velocity.y < -wallSlideSpeedMax) {
 				velocity.y = -wallSlideSpeedMax;
@@ -207,14 +202,11 @@ public class Player : MonoBehaviour {
 		}
 	}
 
-    void HandleRunning() {
-        // Clint - stop draining stamina when the player isn't moving, but is still holding sprint 
-        if (directionalInput.x != 0 && isRunning) {
+    void HandleSprinting() {
+        isSprinting = isTryingToSprint && stamina > 0;
+        if (velocity.x != 0 && isSprinting) {
             drainStamina(Time.deltaTime);
-            if (stamina == 0) {
-                isRunning = false;
-            }
-        } else if (stamina < maxStamina && (directionalInput.x == 0 || !isTryingToRun)) {
+        } else if (stamina < maxStamina && (velocity.x == 0 || !isTryingToSprint)) {
             stamina += Time.deltaTime;
         }
     }
@@ -229,6 +221,17 @@ public class Player : MonoBehaviour {
         }
     }
 
+    void HandleWallJumping() {
+        if(currentWallJumpTime > wallJumpDuration) {
+            wallJumping = false;
+            currentWallJumpTime = 0f;
+
+        } else if (wallJumping) {
+            currentWallJumpTime += Time.deltaTime;
+        }
+
+    }
+
     public void PerformDodge() {
         if (controller.collisions.below) {
             isDodging = true;
@@ -236,37 +239,27 @@ public class Player : MonoBehaviour {
         }
     }
 
-    public void startSprint ()
-    {
-        if (stamina > 0) {
-            isRunning = true;
-            isTryingToRun = true;
-        }
-    }
-
-    public void endSprint ()
-    {
-        isRunning = false;
-        isTryingToRun = false;
-    }
-
     void CalculateVelocity() {
         float targetVelocityX;
         float currentAcceleration;
-        if (isDodging && !wallJumping) {
-            targetVelocityX = ((isFacingLeft) ? -1 : 1) * dodgeSpeed;
-            currentAcceleration = accelerationTimeDodge;
+        if (wallJumping) {
+            velocity.x = -wallDirX * wallLeap.x;
+            velocity.y = wallLeap.y;
         } else {
-            if (isRunning && !wallJumping) {
-                targetVelocityX = directionalInput.x * runSpeed;
+            if (isDodging && !wallJumping) {
+                targetVelocityX = ((isFacingLeft) ? -1 : 1) * dodgeSpeed;
+                currentAcceleration = accelerationTimeDodge;
+            } else if (isSprinting && !wallJumping) {
+                targetVelocityX = directionalInput.x * sprintSpeed;
+                currentAcceleration = (controller.collisions.below) ? accelerationTimeGrounded : accelerationTimeAirborne;
             } else {
                 targetVelocityX = directionalInput.x * moveSpeed;
+                currentAcceleration = (controller.collisions.below) ? accelerationTimeGrounded : accelerationTimeAirborne;
             }
-            currentAcceleration = (controller.collisions.below) ? accelerationTimeGrounded : accelerationTimeAirborne;
-        }
 
-        velocity.x = Mathf.SmoothDamp(velocity.x, targetVelocityX, ref velocityXSmoothing, currentAcceleration);
-        velocity.y += gravity * Time.deltaTime;
+            velocity.x = Mathf.SmoothDamp(velocity.x, targetVelocityX, ref velocityXSmoothing, currentAcceleration);
+            velocity.y += gravity * Time.deltaTime;
+        }
 	}
 
     void OnGUI() {

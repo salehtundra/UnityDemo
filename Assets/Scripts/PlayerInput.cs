@@ -22,12 +22,7 @@ public class PlayerInput : MonoBehaviour {
 			player.OnJumpInputUp ();
 		}
 
-		if (Input.GetButtonDown("Sprint")) {
-            player.startSprint();
-        }
-		else if (Input.GetButtonUp("Sprint")) {
-            player.endSprint();
-        }
+        player.SetIsTryingToSprint(Input.GetButton("Sprint"));
 
 		if (Input.GetButtonDown("Dodge")) {
             player.PerformDodge();
