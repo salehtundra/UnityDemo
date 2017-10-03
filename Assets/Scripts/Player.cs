@@ -4,9 +4,6 @@ using System.Collections;
 [RequireComponent (typeof (Controller2D))]
 public class Player : MonoBehaviour {
 
-    float staminaThreshold = 1.0f;
-    float staminaDampner = 0.5f;
-
     // Jumping
     public float maxJumpHeight = 4;
     public float minJumpHeight = 1;
@@ -44,13 +41,12 @@ public class Player : MonoBehaviour {
     float wallJumpDuration = .1f;
 
     //Stamina bar
-    public float stamina, maxStamina = 5;
-    bool inStaminaPenalty = false;
+    Stamina stamina;
     Rect staminaRect;
     Texture2D staminaTexture;
 
     //Health bar
-    public float health, maxHealth = 5;
+    Health health;
     Rect healthRect;
     Texture2D healthTexture;
 
@@ -87,8 +83,8 @@ public class Player : MonoBehaviour {
 
     void Start() {
         controller = GetComponent<Controller2D> ();
-        stamina = maxStamina;
-        health = maxHealth;
+        stamina = new Stamina(5, 5);
+        health = new Health(5, 5);
 
         ResetExperienceForNextLevel();
 
@@ -145,7 +141,7 @@ public class Player : MonoBehaviour {
     }
 
     public void OnJumpInputDown() {
-        if (wallSliding && !inStaminaPenalty) {
+        if (wallSliding && !stamina.inStaminaPenalty) {
             drainStamina(1);
             wallJumping = true;
         }
@@ -168,10 +164,8 @@ public class Player : MonoBehaviour {
     }
 
     public void drainStamina(float deduction) {
-        stamina -= deduction;
-        if (stamina < 0) {
-            stamina = 0;
-            inStaminaPenalty = true;
+        stamina.DecreaseCurrentStamina(deduction);
+        if (stamina.inStaminaPenalty) {
             staminaTexture.SetPixel(1, 1, Color.white);
             staminaTexture.Apply();
         }
@@ -226,23 +220,23 @@ public class Player : MonoBehaviour {
     }
 
     void HandleSprinting() {
-        isSprinting = isTryingToSprint && stamina > 0 && !inStaminaPenalty;
+        isSprinting = isTryingToSprint && stamina.GetCurrentStamina() > 0 && !stamina.inStaminaPenalty;
         if ( isSprinting && directionalInput.x != 0) { 
             drainStamina(Time.deltaTime);
         }
     }
 
     void rechargeStamina() {
-        if (inStaminaPenalty && stamina >= staminaThreshold) {
-            inStaminaPenalty = false;
+        if (stamina.inStaminaPenalty && stamina.GetCurrentStamina() >= stamina.staminaThreshold) {
+            stamina.inStaminaPenalty = false;
             staminaTexture.SetPixel(1, 1, Color.green);
             staminaTexture.Apply();
         }
-        if (stamina < maxStamina) {
-            if (inStaminaPenalty) {
-                stamina += Time.deltaTime * staminaDampner;
+        if (stamina.GetCurrentStamina() < stamina.GetMaxStamina()) {
+            if (stamina.inStaminaPenalty) {
+                stamina.IncreaseCurrentStamina(Time.deltaTime * stamina.staminaDampner);
             } else if (velocity.x == 0 || !isTryingToSprint) {
-                stamina += Time.deltaTime;
+                stamina.IncreaseCurrentStamina(Time.deltaTime);
             }
         }
     }
@@ -274,7 +268,7 @@ public class Player : MonoBehaviour {
     }
 
     public void PerformDodge() {
-        if (controller.collisions.below && !inStaminaPenalty) {
+        if (controller.collisions.below && !stamina.inStaminaPenalty) {
             isDodging = true;
             drainStamina(1);
         }
@@ -306,7 +300,7 @@ public class Player : MonoBehaviour {
     }
 
     void OnGUI() {
-        float healthRatio = health / maxHealth;
+        float healthRatio = health.GetCurrentHealth() / health.GetMaxHealth();
         float healthRectWidth = healthRatio * Screen.width / 3;
         healthRect.width = healthRectWidth;
         GUI.DrawTexture(healthRect, healthTexture);
@@ -316,7 +310,7 @@ public class Player : MonoBehaviour {
         debugRect.width = debugRectWidth;
         GUI.DrawTexture(debugRect, debugTexture);
 
-        float staminaRatio = stamina / maxStamina;
+        float staminaRatio = stamina.GetCurrentStamina() / stamina.GetMaxStamina();
         float staminaRectWidth = staminaRatio * Screen.width / 3;
         staminaRect.width = staminaRectWidth;
         GUI.DrawTexture(staminaRect, staminaTexture);
