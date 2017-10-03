@@ -62,7 +62,6 @@ public class Player : MonoBehaviour {
     int hardcapLevel = 99;
     int previousLevelExpNeeded;
     int currentLevelExpNeeded;
-    int nextLevelExpNeeded;
     Rect expRect;
     Texture2D expTexture;
 
@@ -91,9 +90,7 @@ public class Player : MonoBehaviour {
         stamina = maxStamina;
         health = maxHealth;
 
-        previousLevelExpNeeded = Mathf.RoundToInt(Mathf.Pow((currentLevel - 1), experienceNeededRate) * initalExperienceToLevel);
-        currentLevelExpNeeded = Mathf.RoundToInt(Mathf.Pow(currentLevel, experienceNeededRate) * initalExperienceToLevel);
-        nextLevelExpNeeded = Mathf.RoundToInt(Mathf.Pow((currentLevel + 1), experienceNeededRate) * initalExperienceToLevel);
+        ResetExperienceForNextLevel();
 
         healthRect = new Rect(Screen.width * 0.1F, Screen.height * 0.15F, Screen.width * 0.4F, Screen.height * 0.02F);
         healthTexture = new Texture2D(1, 1);
@@ -197,9 +194,7 @@ public class Player : MonoBehaviour {
         currentExperience += expPoints;
         if (currentExperience >= currentLevelExpNeeded && currentLevel <= hardcapLevel) {
             currentLevel++;
-            previousLevelExpNeeded = Mathf.RoundToInt(Mathf.Pow((currentLevel - 1), experienceNeededRate) * initalExperienceToLevel);
-            currentLevelExpNeeded = Mathf.RoundToInt(Mathf.Pow(currentLevel, experienceNeededRate) * initalExperienceToLevel);
-            nextLevelExpNeeded = Mathf.RoundToInt(Mathf.Pow((currentLevel + 1), experienceNeededRate) * initalExperienceToLevel);
+            ResetExperienceForNextLevel();
         }
     }
    
@@ -273,6 +268,11 @@ public class Player : MonoBehaviour {
 
     }
 
+    void ResetExperienceForNextLevel() {
+        previousLevelExpNeeded = Mathf.RoundToInt(Mathf.Pow((currentLevel - 1), experienceNeededRate) * initalExperienceToLevel);
+        currentLevelExpNeeded = Mathf.RoundToInt(Mathf.Pow(currentLevel, experienceNeededRate) * initalExperienceToLevel);
+    }
+
     public void PerformDodge() {
         if (controller.collisions.below && !inStaminaPenalty) {
             isDodging = true;
@@ -321,7 +321,7 @@ public class Player : MonoBehaviour {
         staminaRect.width = staminaRectWidth;
         GUI.DrawTexture(staminaRect, staminaTexture);
 
-        float expRatio = (float)(currentExperience - previousLevelExpNeeded) / (float)(nextLevelExpNeeded - currentLevelExpNeeded);
+        float expRatio = (float)(currentExperience - previousLevelExpNeeded) / (float)(currentLevelExpNeeded - previousLevelExpNeeded);
         float expRectWidth = expRatio * Screen.width / 3;
         expRect.width = expRectWidth;
         GUI.DrawTexture(expRect, expTexture);
