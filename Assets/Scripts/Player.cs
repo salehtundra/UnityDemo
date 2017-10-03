@@ -60,7 +60,7 @@ public class Player : MonoBehaviour {
     public int currentExperience = 0;
     public int currentLevel = 1;
     int hardcapLevel = 99;
-    int previousLevelExpNeeded;
+    int previousLevelExpNeeded = 0;
     int currentLevelExpNeeded;
     Rect expRect;
     Texture2D expTexture;
@@ -269,7 +269,7 @@ public class Player : MonoBehaviour {
     }
 
     void ResetExperienceForNextLevel() {
-        previousLevelExpNeeded = (currentLevel - 1 == 0) ? 0 : Mathf.RoundToInt(Mathf.Pow((currentLevel - 1), experienceNeededRate) * initalExperienceToLevel);
+        previousLevelExpNeeded = currentLevelExpNeeded;
         currentLevelExpNeeded = Mathf.RoundToInt(Mathf.Pow(currentLevel, experienceNeededRate) * initalExperienceToLevel);
     }
 
