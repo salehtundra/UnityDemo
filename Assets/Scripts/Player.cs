@@ -57,9 +57,12 @@ public class Player : MonoBehaviour {
     //Experience and Experience bar
     float initalExperienceToLevel = 500;
     float experienceNeededRate = 1.25f;
-    int currentExperience = 0;
-    int currentLevel = 1;
+    public int currentExperience = 0;
+    public int currentLevel = 1;
     int hardcapLevel = 99;
+    int previousLevelExpNeeded;
+    int currentLevelExpNeeded;
+    int nextLevelExpNeeded;
     Rect expRect;
     Texture2D expTexture;
 
@@ -80,10 +83,17 @@ public class Player : MonoBehaviour {
         isTryingToSprint = sprintValue;
     }
 
+    private void Awake() {
+    }
+
     void Start() {
         controller = GetComponent<Controller2D> ();
         stamina = maxStamina;
         health = maxHealth;
+
+        previousLevelExpNeeded = Mathf.RoundToInt(Mathf.Pow((currentLevel - 1), experienceNeededRate) * initalExperienceToLevel);
+        currentLevelExpNeeded = Mathf.RoundToInt(Mathf.Pow(currentLevel, experienceNeededRate) * initalExperienceToLevel);
+        nextLevelExpNeeded = Mathf.RoundToInt(Mathf.Pow((currentLevel + 1), experienceNeededRate) * initalExperienceToLevel);
 
         healthRect = new Rect(Screen.width * 0.1F, Screen.height * 0.15F, Screen.width * 0.4F, Screen.height * 0.02F);
         healthTexture = new Texture2D(1, 1);
@@ -128,6 +138,9 @@ public class Player : MonoBehaviour {
                 velocity.y = 0;
             }
         }
+    }
+
+    private void LateUpdate() {
     }
 
     public void SetDirectionalInput (Vector2 input) {
@@ -182,8 +195,11 @@ public class Player : MonoBehaviour {
     //Chris
     public void addExperience(int expPoints) {
         currentExperience += expPoints;
-        if (currentExperience >= Mathf.Pow(currentLevel, experienceNeededRate) * initalExperienceToLevel && currentLevel <= hardcapLevel) {
+        if (currentExperience >= currentLevelExpNeeded && currentLevel <= hardcapLevel) {
             currentLevel++;
+            previousLevelExpNeeded = Mathf.RoundToInt(Mathf.Pow((currentLevel - 1), experienceNeededRate) * initalExperienceToLevel);
+            currentLevelExpNeeded = Mathf.RoundToInt(Mathf.Pow(currentLevel, experienceNeededRate) * initalExperienceToLevel);
+            nextLevelExpNeeded = Mathf.RoundToInt(Mathf.Pow((currentLevel + 1), experienceNeededRate) * initalExperienceToLevel);
         }
     }
    
@@ -290,8 +306,6 @@ public class Player : MonoBehaviour {
     }
 
     void OnGUI() {
-
-
         float healthRatio = health / maxHealth;
         float healthRectWidth = healthRatio * Screen.width / 3;
         healthRect.width = healthRectWidth;
@@ -307,10 +321,7 @@ public class Player : MonoBehaviour {
         staminaRect.width = staminaRectWidth;
         GUI.DrawTexture(staminaRect, staminaTexture);
 
-        float expRatio = (currentExperience - Mathf.Pow((currentLevel - 1), experienceNeededRate) * initalExperienceToLevel) / (Mathf.Pow((currentLevel + 1), experienceNeededRate) * initalExperienceToLevel - (Mathf.Pow(currentLevel, experienceNeededRate) * initalExperienceToLevel));
-        Debug.Log((currentLevel - 1) * experienceNeededRate * initalExperienceToLevel);
-        Debug.Log(((currentLevel + 1) * experienceNeededRate * initalExperienceToLevel));
-        Debug.Log(expRatio);
+        float expRatio = (float)(currentExperience - previousLevelExpNeeded) / (float)(nextLevelExpNeeded - currentLevelExpNeeded);
         float expRectWidth = expRatio * Screen.width / 3;
         expRect.width = expRectWidth;
         GUI.DrawTexture(expRect, expTexture);
