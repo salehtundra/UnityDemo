@@ -269,7 +269,7 @@ public class Player : MonoBehaviour {
     }
 
     void ResetExperienceForNextLevel() {
-        previousLevelExpNeeded = currentLevelExpNeeded;
+        previousLevelExpNeeded = (currentLevel - 1 == 0) ? 0 : currentLevelExpNeeded;
         currentLevelExpNeeded = Mathf.RoundToInt(Mathf.Pow(currentLevel, experienceNeededRate) * initalExperienceToLevel);
     }
 
