@@ -27,7 +27,8 @@ public class RaycastController : MonoBehaviour {
 	}
 
 	public virtual void Start() {
-		CalculateRaySpacing ();
+        // collisionMask = LayerMask.GetMask("collidable");
+        CalculateRaySpacing ();
 	}
 
 	public void UpdateRaycastOrigins() {
@@ -59,3 +60,4 @@ public class RaycastController : MonoBehaviour {
 		public Vector2 bottomLeft, bottomRight;
 	}
 }
+
