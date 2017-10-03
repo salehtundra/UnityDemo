@@ -97,8 +97,6 @@ public class Player : MonoBehaviour {
 	}
  
 	void Update() {
-        // Clint - abstracted into a function (with a shitty name) and moved to 
-        // the beginning of update
         CalculateFacingDirection();
         HandleWallSliding();
         HandleDodging();
@@ -110,7 +108,6 @@ public class Player : MonoBehaviour {
         controller.Move (velocity * Time.deltaTime, directionalInput);
 
 		if (controller.collisions.above || controller.collisions.below) {
-            //wallJumping = false;
 			if (controller.collisions.slidingDownMaxSlope) {
 				velocity.y += controller.collisions.slopeNormal.y * -gravity * Time.deltaTime;
 			} else {
@@ -120,19 +117,7 @@ public class Player : MonoBehaviour {
 	}
 
 	public void SetDirectionalInput (Vector2 input) {
-        // float deadZone = 0.3F;
-
-        // Clint - Not necassary anymore - we don't use directional input when we are dodging
-        // if (!isDodging) {
         directionalInput = input;
-            // if (directionalInput.x < deadZone  && directionalInput.x > -deadZone) {
-            //     directionalInput.x = 0F;
-            // }
-            // if (directionalInput.y < deadZone && directionalInput.y > -deadZone) {
-            //     directionalInput.y = 0F;
-            //}
-
-        // }
 	}
 
 	public void OnJumpInputDown() {
@@ -209,7 +194,7 @@ public class Player : MonoBehaviour {
 
     void HandleSprinting() {
         isSprinting = isTryingToSprint && stamina > 0 && !inStaminaPenalty;
-        if (velocity.x != 0 && isSprinting) {
+        if ( isSprinting && directionalInput.x != 0) { 
             drainStamina(Time.deltaTime);
         }
     }
