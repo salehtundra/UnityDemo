@@ -63,7 +63,6 @@ public class Player : MonoBehaviour {
     Rect expRect;
     Texture2D expTexture;
 
-
     // Debug Bar 
     Rect debugRect;
     Texture2D debugTexture;
