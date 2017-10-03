@@ -54,6 +54,15 @@ public class Player : MonoBehaviour {
     Rect healthRect;
     Texture2D healthTexture;
 
+    //Experience and Experience bar
+    float initalExperienceToLevel = 500;
+    float experienceNeededRate = 1.25f;
+    int currentExperience = 0;
+    int currentLevel = 1;
+    int hardcapLevel = 99;
+    Rect expRect;
+    Texture2D expTexture;
+
     // Debug Bar 
     Rect debugRect;
     Texture2D debugTexture;
@@ -76,11 +85,6 @@ public class Player : MonoBehaviour {
         stamina = maxStamina;
         health = maxHealth;
 
-        staminaRect = new Rect(Screen.width * 0.1F, Screen.height * 0.2F, Screen.width * 0.3F, Screen.height * 0.02F);
-        staminaTexture = new Texture2D(1, 1);
-        staminaTexture.SetPixel(1, 1, Color.green);
-        staminaTexture.Apply();
-
         healthRect = new Rect(Screen.width * 0.1F, Screen.height * 0.15F, Screen.width * 0.4F, Screen.height * 0.02F);
         healthTexture = new Texture2D(1, 1);
         healthTexture.SetPixel(1, 1, Color.red);
@@ -88,8 +92,18 @@ public class Player : MonoBehaviour {
 
         debugRect = new Rect(Screen.width * 0.1F, Screen.height * 0.175F, Screen.width / 3, Screen.height * 0.02F);
         debugTexture = new Texture2D(1, 1);
-        debugTexture.SetPixel(1, 1, Color.cyan);
+        debugTexture.SetPixel(1, 1, Color.yellow);
         debugTexture.Apply();
+
+        staminaRect = new Rect(Screen.width * 0.1F, Screen.height * 0.2F, Screen.width * 0.3F, Screen.height * 0.02F);
+        staminaTexture = new Texture2D(1, 1);
+        staminaTexture.SetPixel(1, 1, Color.green);
+        staminaTexture.Apply();
+
+        expRect = new Rect(Screen.width * 0.1F, Screen.height * 0.225F, Screen.width * 0.3F, Screen.height * 0.01F);
+        expTexture = new Texture2D(1, 1);
+        expTexture.SetPixel(1, 1, Color.cyan);
+        expTexture.Apply();
 
         gravity = -(2 * maxJumpHeight) / Mathf.Pow (timeToJumpApex, 2);
 		maxJumpVelocity = Mathf.Abs(gravity) * timeToJumpApex;
@@ -162,6 +176,14 @@ public class Player : MonoBehaviour {
              isFacingLeft = false;
         } else if (directionalInput.x < 0) {
              isFacingLeft = true;
+        }
+    }
+
+    //Chris
+    public void addExperience(int expPoints) {
+        currentExperience += expPoints;
+        if (currentExperience >= currentLevel * experienceNeededRate * initalExperienceToLevel && currentLevel <= hardcapLevel) {
+            currentLevel++;
         }
     }
    
@@ -268,10 +290,7 @@ public class Player : MonoBehaviour {
 	}
 
     void OnGUI() {
-        float staminaRatio = stamina / maxStamina;
-        float staminaRectWidth = staminaRatio * Screen.width / 3;
-        staminaRect.width = staminaRectWidth;
-        GUI.DrawTexture(staminaRect, staminaTexture);
+
 
         float healthRatio = health / maxHealth;
         float healthRectWidth = healthRatio * Screen.width / 3;
@@ -282,5 +301,18 @@ public class Player : MonoBehaviour {
         float debugRectWidth = debugRatio * Screen.width / 3;
         debugRect.width = debugRectWidth;
         GUI.DrawTexture(debugRect, debugTexture);
+
+        float staminaRatio = stamina / maxStamina;
+        float staminaRectWidth = staminaRatio * Screen.width / 3;
+        staminaRect.width = staminaRectWidth;
+        GUI.DrawTexture(staminaRect, staminaTexture);
+
+        float expRatio = (currentExperience - (currentLevel - 1) * experienceNeededRate * initalExperienceToLevel) / ((currentLevel + 1) * experienceNeededRate * initalExperienceToLevel - (currentLevel * experienceNeededRate * initalExperienceToLevel));
+        Debug.Log((currentLevel - 1) * experienceNeededRate * initalExperienceToLevel);
+        Debug.Log(((currentLevel + 1) * experienceNeededRate * initalExperienceToLevel));
+        Debug.Log(expRatio);
+        float expRectWidth = expRatio * Screen.width / 3;
+        expRect.width = expRectWidth;
+        GUI.DrawTexture(expRect, expTexture);
     }
 }

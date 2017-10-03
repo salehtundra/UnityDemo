@@ -26,5 +26,10 @@ public class PlayerInput : MonoBehaviour {
 		if (Input.GetButtonDown("Dodge")) {
             player.PerformDodge();
         }
+
+        //DEBUG FUNCTION
+        if (Input.GetKeyDown(KeyCode.E)) {
+            player.addExperience(100);
+        }
     }
 }
