@@ -182,7 +182,7 @@ public class Player : MonoBehaviour {
     //Chris
     public void addExperience(int expPoints) {
         currentExperience += expPoints;
-        if (currentExperience >= currentLevel * experienceNeededRate * initalExperienceToLevel && currentLevel <= hardcapLevel) {
+        if (currentExperience >= Mathf.Pow(currentLevel, experienceNeededRate) * initalExperienceToLevel && currentLevel <= hardcapLevel) {
             currentLevel++;
         }
     }
@@ -307,7 +307,7 @@ public class Player : MonoBehaviour {
         staminaRect.width = staminaRectWidth;
         GUI.DrawTexture(staminaRect, staminaTexture);
 
-        float expRatio = (currentExperience - (currentLevel - 1) * experienceNeededRate * initalExperienceToLevel) / ((currentLevel + 1) * experienceNeededRate * initalExperienceToLevel - (currentLevel * experienceNeededRate * initalExperienceToLevel));
+        float expRatio = (currentExperience - Mathf.Pow((currentLevel - 1), experienceNeededRate) * initalExperienceToLevel) / (Mathf.Pow((currentLevel + 1), experienceNeededRate) * initalExperienceToLevel - (Mathf.Pow(currentLevel, experienceNeededRate) * initalExperienceToLevel));
         Debug.Log((currentLevel - 1) * experienceNeededRate * initalExperienceToLevel);
         Debug.Log(((currentLevel + 1) * experienceNeededRate * initalExperienceToLevel));
         Debug.Log(expRatio);
