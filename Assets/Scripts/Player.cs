@@ -194,7 +194,7 @@ public class Player : MonoBehaviour {
 
     void HandleSprinting() {
         isSprinting = isTryingToSprint && stamina > 0 && !inStaminaPenalty;
-        if (velocity.x != 0 && isSprinting && directionalInput.x != 0) {
+        if ( isSprinting && directionalInput.x != 0) { 
             drainStamina(Time.deltaTime);
         }
     }
