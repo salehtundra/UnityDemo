@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 public class PlatformController : RaycastController {
 
-	public LayerMask passengerMask;
+	public LayerMask passengerMadask;
 
 	public Vector3[] localWaypoints;
 	Vector3[] globalWaypoints;
